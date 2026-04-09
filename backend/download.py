@@ -2,6 +2,26 @@ from datetime import datetime
 import io
 
 
+def _sanitize(text: str) -> str:
+    """Replace Unicode chars that latin-1 built-in fonts can't render."""
+    return (
+        text
+        .replace("\u2013", "-")   # en-dash
+        .replace("\u2014", "-")   # em-dash
+        .replace("\u2018", "'")   # left single quote
+        .replace("\u2019", "'")   # right single quote
+        .replace("\u201c", '"')   # left double quote
+        .replace("\u201d", '"')   # right double quote
+        .replace("\u2265", ">=")  # ≥
+        .replace("\u2264", "<=")  # ≤
+        .replace("\u00b0", " ")   # degree sign
+        .replace("\u2022", "-")   # bullet
+        .replace("\u2192", "->")  # →
+        .replace("\u00b7", "-")   # middle dot
+        .encode("latin-1", errors="replace").decode("latin-1")
+    )
+
+
 def _hb_from_pcv(pcv):
     return round(pcv / 3, 1)
 
@@ -81,7 +101,7 @@ def generate_pdf(input_data: dict, result: dict) -> bytes:
     pdf.set_font("Helvetica", "B", 16)
     pdf.cell(0, 12, "MAMACORD AI TRIAGE REPORT", new_x="LMARGIN", new_y="NEXT", align="C", fill=True)
     pdf.set_font("Helvetica", "B", 13)
-    pdf.cell(0, 10, f"Risk Level: {risk}", new_x="LMARGIN", new_y="NEXT", align="C", fill=True)
+    pdf.cell(0, 10, _sanitize(f"Risk Level: {risk}"), new_x="LMARGIN", new_y="NEXT", align="C", fill=True)
     pdf.ln(4)
 
     pdf.set_text_color(0, 0, 0)
@@ -89,12 +109,12 @@ def generate_pdf(input_data: dict, result: dict) -> bytes:
     for heading, lines in sections[1:]:  # skip first section already rendered
         pdf.set_font("Helvetica", "B", 10)
         pdf.set_fill_color(240, 240, 240)
-        pdf.cell(0, 7, heading, new_x="LMARGIN", new_y="NEXT", fill=True)
+        pdf.cell(0, 7, _sanitize(heading), new_x="LMARGIN", new_y="NEXT", fill=True)
         pdf.set_font("Helvetica", "", 9)
         for line in lines:
             if line:
                 # wrap long lines
-                pdf.multi_cell(0, 6, f"  {line}", new_x="LMARGIN", new_y="NEXT")
+                pdf.multi_cell(0, 6, _sanitize(f"  {line}"), new_x="LMARGIN", new_y="NEXT")
         pdf.ln(2)
 
     return bytes(pdf.output())
