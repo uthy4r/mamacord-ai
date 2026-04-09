@@ -280,6 +280,11 @@ class DownloadPayload(BaseModel):
     input: dict
 
 
+@app.get("/")
+def root():
+    return {"app": "Mamacord AI", "docs": "API is running. Use the frontend client."}
+
+
 @app.get("/health")
 @limiter.limit("30/minute")
 def health_check(request: Request):
